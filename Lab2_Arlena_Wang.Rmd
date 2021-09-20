@@ -1,0 +1,130 @@
+---
+title: "Lab 2"
+author: "Arlena Wang"
+date: "9/19/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+library(classdata)
+data(choco)
+str(choco)
+```
+
+#Searching for the Best Chocolates
+
+1.) How are the cocoa percent distributed? Create both a histogram and a boxplot and describe them. Don’t forget to mention outliers, if there are any.
+
+```{r}
+hist(choco$CocoaPercent, main = "Cocoa Percent", xlab = "Chocolate Companies", ylab = "Cocoa Percent (%)", col = "blue")
+
+boxplot(choco$CocoaPercent, main = "Cocoa Percent", xlab = "Chocolate Companies", ylab = "Cocoa Percent (%)", col = "blue")
+
+summary(choco$CocoaPercent)
+```
+The cocoa percent distribution is bimodel and approximately normal.  The center (mean) lies at 71.65%. The spread (IQR) is (74-70)= 4%.  There are many outliers below the minimum and above the maximum.  Q1-1.5(IQR) & Q3+1.5(IQR): 70-(1.5)(4)=64 & 74-(1.5)(4)=80.  This means that all the values below 64% cocoa are possible outliers and all the values above 80% are possible outliers.
+
+2.) How does the number of ratings depend on the country of bean origin? Draw a bar chart of the number of ratings by bean origin. [Hint: If your graph is too dense and the labels are not legible, show fewer bean origins.]
+
+```{r}
+Country <-sort(table(choco$CountryBeanOrigin), decreasing = TRUE)
+beanorigin <- head(Country, 20)
+barplot(beanorigin, las = 2, cex.names = 0.5, ylim = c(0, 250), main = "Number of Ratings Vs. Bean Origin", xlab = "Bean Origin", ylab = "Number of Ratings", col = "blue")
+```
+The number of ratings seem to be highest in Venezuela.  Some other countries that have high ratings are in Peru, Dominican Republic, and Ecuador.  Cocoa beans originate and are grown in the Amazon which include the counties Venezuela, Peru, Ecuador, etc.  These countries get more cocoa beans which leads them to get more ratings.  Therefore, the number of ratings do seem to depend on the country of bean origin. 
+
+3.) Do ratings depend on the cacao percentage of a chocolate bar? Create both numerical and graphical summaries, and explain. [Hint: Think about why the scatterplot is not a very good choice for visualization here.]
+
+```{r}
+plot(choco$CocoaPercent, choco$Rating, main = "Cocoa Rating Numbers Vs. Percent", xlab = "Cocoa Percent (%)", ylab = "Number of Ratings", col = "blue")
+
+Cocoa <-sort(table(choco$CocoaPercent), decreasing = TRUE)
+cocoapercent <- head(Cocoa, 15)
+barplot(cocoapercent, las = 2, cex.names = 0.5, main = "Number of Ratings Vs. Bean Origin", xlab = "Cocoa Percent (%)", ylab = "Number of Ratings", col = "blue")
+
+summary(choco$Rating)
+summary(choco$CocoaPercent)
+```
+There is an abnormally high number of ratings (~1000) in 70% of cocoa in a chocolate bar.  Some values near 70% like 75% or 72% are also somewhat higher.  Other percentages of cocoa do not have very high numbers of ratings.  In addition, the center (median) of the Cocoa Percent is at 70% as well.  Although a scatterplot was graphed, it is not a very good choice for visualization because it is very condensed.  There are many values that happen to be around the same value and overlap.  Thus, the better choice is to use a bar chart because you can more easily see the relationship between Cocoa Ratings and Percent.  In addition, from the bar chart, there is no specific pattern, so there is not really a strong relationship between number of ratings and cocoa percent, which is another reason why the scatterplot is not a good representation of the data.
+
+4.) How do different bean origins compare in terms of the flavor of chocolates? Are beans from some places better than the other? Create both numerical and graphical summaries, and explain.
+
+```{r}
+library(tidyverse)
+flavor <- table(choco$Characteristics1)
+length(flavor)
+summary(as.numeric(flavor))
+flavor_filtered <- flavor[flavor > 50]
+choco_filtered <- filter(choco, Characteristics1 %in% names(flavor_filtered))
+country_filtered <- table(choco$CountryBeanOrigin) %>% 
+  sort(decreasing = TRUE) %>%
+  head(10)
+choco %>% 
+  filter(Characteristics1 %in% names(flavor_filtered)) %>% # filter flavor
+  filter(CountryBeanOrigin %in% names(country_filtered)) %>% # filter country
+  ggplot() +
+  geom_bar(aes(x = CountryBeanOrigin, fill = Characteristics1), position = 'fill') + coord_flip()
+
+Characterstic1 <- sort(table(choco$Characteristics1), decreasing = TRUE)
+Group1 <- head(Characterstic1, 10)
+barplot(Group1, las = 2, cex.names = 0.5, ylim = c(0,200), main = "Bean Origin Vs. Characterstics 1", xlab = "Characteristics 1", ylab = "Bean Origin", col = "blue")
+  
+head(tapply(choco$Rating, choco$CountryBeanOrigin, summary), n =5)
+```
+From the first graph, you can see the distribution of characteristics1 which are the flavors.  The main flavor characteristics are creamy, sandy, and sweet.  It seems that Brazil is high in creamy flavors, so the cocoa beans from Brazil must be more creamy.  As you can see from the graph, every location is different and unique each other.  Therefore, beans from different origins are also different which can affect different chocolate flavors.  Additionally, it is possible that the flavor of the chocolates depend on the Country of the bean origin.  From the second chart, you can see how the majority of countries have creamy flavors.  Brazil has an average rating of 3.263.  Looking at the results as an whole, because the rating is higher with creamy flavor from beans that originate from places like Brazil, it is evident that some beans are better from some places over others.
+
+5.) If you work on this lab by yourself, brainstorm two analyses you would like to perform. If you work with a teammate, brainstorm at least three analyses with your teammate. Describe in plain language what comparisons are you making. Create suitable numerical and graphical summaries for your analyses. Describe the results.
+
+* Characteristics1 (flavor) and Ratings.  I am investigating whether these flavor results affect the ratings.
+
+```{r}
+library(tidyverse)
+flavor <- table(choco$Characteristics1)
+length(flavor)
+summary(as.numeric(flavor))
+flavor_filtered <- flavor[flavor > 50]
+choco_filtered <- filter(choco, Characteristics1 %in% names(flavor_filtered))
+rating_filtered <- table(choco$Rating) %>%
+  sort(decreasing = TRUE) %>%
+  head(10)
+choco %>% 
+  filter(Characteristics1 %in% names(flavor_filtered)) %>% # filter flavor
+  filter(Rating %in% names(rating_filtered)) %>% # filter country
+  ggplot() +
+  geom_bar(aes(x = Rating, fill = Characteristics1), position = 'fill') + coord_flip()
+
+head(tapply(choco$Rating, choco$Characteristics1, summary), n =5)
+```
+According to the chart, it seems that the majority of the highest ratings has a creamy flavor.  The majority of the lowest rating has a sticky or creamy flavor.  All other ratings seem to have a pretty even distribution of different flavor characteristics.  It seems that the ratings are not too much affected by the flavor characteristics of the chocolate except for the highest and lowest ratings.  I believe only the highest and lowest ratings are only affected by the flavor characteristics.  There also is no specific pattern that can visually be seen by the values of the ratings of each flavor characteristic, therefore, there isn't much dependency of rating on flavor characteristic.
+
+* Location and Ratings. I am investigating which locations have higher number of ratings.
+ 
+```{r}
+Location <- sort(table(choco$Location), decreasing = TRUE)
+Locations <- head(Location, 10)
+barplot(Locations, las = 2, cex.names = 0.5, ylim = c(0,1200), main = "Ratings Vs. Location", xlab = "Location", ylab = "Ratings", col = "blue")
+
+library(tidyverse)
+location <- table(choco$Location)
+length(location)
+summary(as.numeric(location))
+location_filtered <- location[location > 50]
+locations_filtered <- filter(choco, Location %in% names(location_filtered))
+rating_filtered <- table(choco$Rating) %>%
+  sort(decreasing = TRUE) %>%
+  head(10)
+choco %>% 
+  filter(Location %in% names(location_filtered)) %>% # filter flavor
+  filter(Rating %in% names(rating_filtered)) %>% # filter country
+  ggplot() +
+  geom_bar(aes(x = Rating, fill = Location), position = 'fill') + coord_flip()
+
+head(tapply(choco$Rating, choco$Location, summary), n =5)
+```
+Based on the bar chart, the USA has the highest number of ratings compared to the other countries.  The rest of the countries seem to have less ratings (below 200).  According to the second chart, in general, you also see how much of the graph is pink, which represents the USA.  You then see the UK having the second highest most number of ratings and after there is little representation of other locations. Even though the USA represents the majority of the number of ratings, the highest rating value (~4) is still mostly represented by the US compared to the other locations.  France is second to represent the highest rating value, followed by Canada, and others.  Although, they all lie at an average of around 3-3.3, based on the actual values of the ratings of each location, there is no specific pattern that can be visualized, although, therefore, there is not much dependency of ratings on location.  The only anomaly is that there is a high number of ratings on the US.
